@@ -1,0 +1,8 @@
+unittest
+socket
+paddleocr
+mlflow
+crewai
+numpy
+datasets
+pillow
