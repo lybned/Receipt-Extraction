@@ -30,7 +30,7 @@ def cleanText(text):
         clean_text = clean_text[1:]
     if (clean_text.endswith("]")):
         clean_text = clean_text[:-1]
-    return "{" + clean_text.replace('"restaurant_name": ",', '"restaurant_name": "",') + "}"
+    return "{" + clean_text.replace('"restaurant_name": ",', '"restaurant_name": "",').replace("'", '"') + "}"
 	
 def are_lists_equal(predict, actual):
     # Convert all strings in both lists to lowercase
@@ -103,7 +103,7 @@ class MLFlowUtil:
 				print("-----------END----------")  
 				#print(json.loads(clean_result)["price"])
 				if ("price" in json.loads(clean_result)):
-					predict_price = float(replace_dot_except_last(str(json.loads(clean_result)["price"])).replace(",", ""))
+					predict_price = float(replace_dot_except_last(str(json.loads(clean_result)["price"])).replace(",", "").replace("$", ""))
 					predict_items = clean_items(json.loads(clean_result)["items"])
 
 					if (actual_price == predict_price) :
@@ -123,8 +123,13 @@ class MLFlowUtil:
 					empty_list.append([receipt_list[i], i])
 				#print("-------------------------")
 
-
-
+			price_n = (price_correct["correct"] + price_correct["wrong"])
+			price_accuracy = price_correct["correct"] / price_n
+			price_conf = 1.96 * ( (price_accuracy * (1 - price_accuracy))/price_n )** 0.5
+			
+			item_n = (item_correct["correct"] + item_correct["wrong"])
+			item_accuracy = item_correct["correct"] / item_n
+			item_conf = 1.96 * ( (item_accuracy * (1 - item_accuracy))/item_n )** 0.5
 			#mlflow.log_param("truth", truth)
 			#mlflow.log_param("predict", predict)
 			mlflow.log_param("minimum_word_length", minimum_word_length)
@@ -136,4 +141,9 @@ class MLFlowUtil:
 			mlflow.log_param("item result", item_correct)
 			mlflow.log_param("wrong items", wrong_items)
 			mlflow.log_param("no extractions", empty_list)
+			mlflow.log_param("Item Accuracy", round(item_accuracy,2))
+			mlflow.log_param("Price Accuracy", round(price_accuracy,2))
+			mlflow.log_param("Item Confidence Interval ", f"({round(item_accuracy - item_conf,2)}, {round(item_accuracy + item_conf,2)})")
+			mlflow.log_param("Price Confidence Interval ", f"({round(price_accuracy - price_conf,2)}, {round(price_accuracy + price_conf,2)})")
+
 				
